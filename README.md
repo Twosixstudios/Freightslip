@@ -38,5 +38,40 @@ git clone [https://github.com/Twosixstudios/ratecon-ai-parser.git](https://githu
 cd ratecon-ai-parser
 
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate
 pip install -r requirements.txt
+```
+
+### 3. Environment Setup
+Create a `.env` file in the root directory and insert your Gemini API Key:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+### 4. Run the Application
+Launch the Streamlit web dashboard:
+
+```bash
+streamlit run app.py
+```
+
+---
+
+## 📁 Repository Structure
+
+```text
+ratecon-ai-parser/
+├── app.py              # Streamlit dashboard & file upload interface
+├── parser.py           # Core Gemini AI multimodal extraction engine
+├── schema.py           # Pydantic data schemas & structure validation
+├── requirements.txt    # Project Python dependencies
+├── .env                # Local secrets (git-ignored)
+└── .gitignore          # Git exclusion rules
+```
+
+---
+
+## 🛡️ License & Credits
+
+Designed and developed by **Erik | Two Six Studios**.
