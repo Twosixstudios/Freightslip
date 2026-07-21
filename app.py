@@ -1,25 +1,33 @@
 import json
+import os
 import pandas as pd
 import streamlit as st
+from database import get_all_loads, init_db, save_load
 from parser import parse_rate_con_pdf
-from database import init_db, save_load, get_all_loads
 
 # Initialize SQLite database on app startup
 init_db()
 
-# Page Configuration - Uses logo.png as browser tab favicon!
+# Check if logo file exists locally or on server
+HAS_LOGO = os.path.exists("logo.png")
+
+# Page Configuration
 st.set_page_config(
     page_title="FreightSlip | Two Six Studios",
-    page_icon="logo.png",
+    page_icon="logo.png" if HAS_LOGO else "�",
     layout="wide",
 )
 
-# Header with Custom Logo
-col_logo, col_title = st.columns([1, 8])
-with col_logo:
-    st.image("logo.png", width=70)
-with col_title:
-    st.title("FreightSlip")
+# Header Section (Failsafe)
+if HAS_LOGO:
+    col_logo, col_title = st.columns([1, 8])
+    with col_logo:
+        st.image("logo.png", width=70)
+    with col_title:
+        st.title("FreightSlip")
+        st.caption("Automated Freight Ingestion Engine — Built by Two Six Studios")
+else:
+    st.title("� FreightSlip")
     st.caption("Automated Freight Ingestion Engine — Built by Two Six Studios")
 
 st.markdown("---")
@@ -98,7 +106,7 @@ with tab_parse:
                     )
 
                 with exp_col3:
-                    if st.button("�️ Save to Local Ledger", type="primary"):
+                    if st.button("� Save to Local Ledger", type="primary"):
                         save_load(rate_con)
                         st.toast("Load successfully saved to database!", icon="✅")
 
