@@ -7,15 +7,21 @@ from database import init_db, save_load, get_all_loads
 # Initialize SQLite database on app startup
 init_db()
 
-# Page Configuration
+# Page Configuration - Uses logo.png as browser tab favicon!
 st.set_page_config(
     page_title="FreightSlip | Two Six Studios",
-    page_icon="�",
+    page_icon="logo.png",
     layout="wide",
 )
 
-st.title("� FreightSlip")
-st.caption("Automated Freight Ingestion Engine — Built by Two Six Studios")
+# Header with Custom Logo
+col_logo, col_title = st.columns([1, 8])
+with col_logo:
+    st.image("logo.png", width=70)
+with col_title:
+    st.title("FreightSlip")
+    st.caption("Automated Freight Ingestion Engine — Built by Two Six Studios")
+
 st.markdown("---")
 
 # Navigation Tabs
