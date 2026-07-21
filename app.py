@@ -8,17 +8,17 @@ from parser import parse_rate_con_pdf
 # Initialize SQLite database on app startup
 init_db()
 
-# Check if logo file exists locally or on server
+# Check if logo file exists on server
 HAS_LOGO = os.path.exists("logo.png")
 
 # Page Configuration
 st.set_page_config(
-    page_title="FreightSlip | Two Six Studios",
-    page_icon="logo.png" if HAS_LOGO else "�",
     layout="wide",
+    page_title="FreightSlip — AI Ingestion Engine",
+    page_icon="⚡"
 )
 
-# Header Section (Failsafe)
+# Header Section (Failsafe with Streamlit Shortcodes)
 if HAS_LOGO:
     col_logo, col_title = st.columns([1, 8])
     with col_logo:
@@ -27,7 +27,7 @@ if HAS_LOGO:
         st.title("FreightSlip")
         st.caption("Automated Freight Ingestion Engine — Built by Two Six Studios")
 else:
-    st.title("� FreightSlip")
+    st.title(":truck: FreightSlip")
     st.caption("Automated Freight Ingestion Engine — Built by Two Six Studios")
 
 st.markdown("---")
@@ -53,67 +53,92 @@ with tab_parse:
                 st.success("Successfully Parsed Rate Confirmation!")
 
                 # --- Financial Highlights Metrics ---
-                col1, col2, col3 = st.columns(3)
-                col1.metric("Total Pay", f"${rate_con.total_pay:,.2f}")
-                col2.metric("Line Haul", f"${rate_con.line_haul_rate:,.2f}")
-                col3.metric("Fuel Surcharge", f"${rate_con.fuel_surcharge:,.2f}")
+                col1, col2 = st.columns([1, 1], gap="large")
 
-                st.markdown("---")
+                with col1:
+                    st.header(" Document Preview")
+                    import pypdfium2 as pdfium
+                    try:
+                        # Load PDF bytes directly with pypdfium2
+                        pdf = pdfium.PdfDocument(pdf_bytes)
+                        first_page = pdf[0]
+                        # Render page at 2x scale for crisp visual quality
+                        image = first_page.render(scale=2).to_pil()
+                        st.image(image, use_container_width=True)
+                    except Exception as pdf_err:
+                        st.warning(f"Could not render visual preview: {pdf_err}")
 
-                # --- Structured Load Details ---
-                st.subheader("� Load & Route Details")
+                with col2:
+                    st.header("⚡ Parsed Payload & Metrics")
+                    
+                    subcol1, subcol2, subcol3, subcol4 = st.columns(4)
+                    subcol1.metric("Total Rate", f"${rate_con.total_pay:,.2f}")
+                    subcol2.metric("Linehaul", f"${rate_con.line_haul_rate:,.2f}")
+                    if hasattr(rate_con, 'broker_name') and rate_con.broker_name:
+                        subcol3.metric("Broker/Carrier", rate_con.broker_name)
+                    else:
+                        subcol3.metric("Broker/Carrier", "N/A")
+                    if hasattr(rate_con, 'total_miles') and rate_con.total_miles:
+                        subcol4.metric("Mileage/RPM", f"{rate_con.total_miles or 'N/A'}")
+                    else:
+                        subcol4.metric("Mileage/RPM", "N/A")
 
-                left_col, right_col = st.columns(2)
+                    st.markdown("---")
 
-                with left_col:
-                    st.write(f"**Broker Name:** {rate_con.broker_name or 'N/A'}")
-                    st.write(f"**Load / Ref #:** {rate_con.load_number or 'N/A'}")
-                    st.write(f"**Equipment:** {rate_con.equipment_type or 'N/A'}")
-                    st.write(f"**Commodity:** {rate_con.commodity or 'N/A'}")
+                    # --- Structured Load Details ---
+                    st.subheader(" Load & Route Details")
 
-                with right_col:
-                    st.write(f"**Origin:** {rate_con.origin or 'N/A'}")
-                    st.write(f"**Destination:** {rate_con.destination or 'N/A'}")
-                    st.write(f"**Total Miles:** {rate_con.total_miles or 'N/A'}")
+                    left_col, right_col = st.columns(2)
 
-                st.markdown("---")
+                    with left_col:
+                        st.write(f"**Broker Name:** {rate_con.broker_name or '—'}")
+                        st.write(f"**Load / Ref #:** {rate_con.load_number or '—'}")
+                        st.write(f"**Equipment:** {rate_con.equipment_type or '—'}")
+                        st.write(f"**Commodity:** {rate_con.commodity or '—'}")
 
-                # --- Data Export & Database Save Section ---
-                st.subheader("� Export & Store Options")
+                    with right_col:
+                        st.write(f"**Origin:** {rate_con.origin or '—'}")
+                        st.write(f"**Destination:** {rate_con.destination or '—'}")
+                        st.write(f"**Total Miles:** {rate_con.total_miles or '—'}")
 
-                data_dict = rate_con.model_dump()
-                json_str = json.dumps(data_dict, indent=2)
+                    st.markdown("---")
 
-                df_export = pd.DataFrame([data_dict])
-                csv_str = df_export.to_csv(index=False)
+                    # --- Data Export & Database Save Section ---
+                    st.subheader(" Export & Store Options")
 
-                exp_col1, exp_col2, exp_col3 = st.columns(3)
+                    data_dict = rate_con.model_dump()
+                    json_str = json.dumps(data_dict, indent=2)
 
-                with exp_col1:
-                    st.download_button(
-                        label="⬇️ Download JSON",
-                        data=json_str,
-                        file_name=f"ratecon_{rate_con.load_number or 'parsed'}.json",
-                        mime="application/json",
-                    )
+                    df_export = pd.DataFrame([data_dict])
+                    csv_str = df_export.to_csv(index=False)
 
-                with exp_col2:
-                    st.download_button(
-                        label="⬇️ Download CSV",
-                        data=csv_str,
-                        file_name=f"ratecon_{rate_con.load_number or 'parsed'}.csv",
-                        mime="text/csv",
-                    )
+                    exp_col1, exp_col2, exp_col3 = st.columns(3)
 
-                with exp_col3:
-                    if st.button("� Save to Local Ledger", type="primary"):
-                        save_load(rate_con)
-                        st.toast("Load successfully saved to database!", icon="✅")
+                    with exp_col1:
+                        st.download_button(
+                            label="⬇️ Download JSON",
+                            data=json_str,
+                            file_name=f"ratecon_{rate_con.load_number or 'parsed'}.json",
+                            mime="application/json",
+                        )
+
+                    with exp_col2:
+                        st.download_button(
+                            label="⬇️ Download CSV",
+                            data=csv_str,
+                            file_name=f"ratecon_{rate_con.load_number or 'parsed'}.csv",
+                            mime="text/csv",
+                        )
+
+                    with exp_col3:
+                        if st.button(" Save to Local Ledger", type="primary"):
+                            save_load(rate_con)
+                            st.toast("Load successfully saved to database!", icon="✅")
 
             except Exception as e:
                 st.error(f"Error processing document: {e}")
     else:
-        st.info("� Drop a PDF rate confirmation above to process load metrics.")
+        st.info(" Drop a PDF rate confirmation above to process load metrics.")
 
 with tab_ledger:
     st.subheader("Database History (`freightslip.db`)")
