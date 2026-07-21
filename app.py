@@ -25,7 +25,7 @@ with col_title:
 st.markdown("---")
 
 # Navigation Tabs
-tab_parse, tab_ledger = st.tabs(["� Parse Rate Con", "� Load Ledger"])
+tab_parse, tab_ledger = st.tabs([":page_facing_up: Parse Rate Con", ":bar_chart: Load Ledger"])
 
 with tab_parse:
     # File Upload Section
