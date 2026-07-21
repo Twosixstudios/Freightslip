@@ -3,4 +3,4 @@ google-genai
 pdfplumber
 streamlit
 python-dotenv
-sqlalchemy
+sqlalchemypypdfium2
