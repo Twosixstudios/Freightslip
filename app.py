@@ -19,25 +19,24 @@ st.set_page_config(
     page_icon="⚡"
 )
 
-# Header Section with Vertically Centered Logo
+# Header Section with Vertically Centered & Larger Logo
 if HAS_LOGO:
-    col_logo, col_title = st.columns([1, 10], vertical_alignment="center")
+    col_logo, col_title = st.columns([1, 4], vertical_alignment="center")
     with col_logo:
-        st.image("logo.png", width=90)
+        st.image("logo.png", width=170)
     with col_title:
         st.title("FreightSlip")
         st.caption("Automated Freight Ingestion Engine — Built by Two Six Studios")
 else:
-    st.title("⚡ FreightSlip")
+    st.title(":truck: FreightSlip")
     st.caption("Automated Freight Ingestion Engine — Built by Two Six Studios")
 
 st.markdown("---")
 
-# Navigation Tabs
-tab_parse, tab_ledger = st.tabs(["� Parse Rate Con", "� Load Ledger"])
+# Navigation Tabs using Streamlit Native Shortcodes
+tab_parse, tab_ledger = st.tabs([":page_facing_up: Parse Rate Con", ":bar_chart: Load Ledger"])
 
 with tab_parse:
-    # File Upload Section
     uploaded_file = st.file_uploader(
         "Upload a Rate Confirmation PDF", type=["pdf"]
     )
@@ -45,10 +44,7 @@ with tab_parse:
     if uploaded_file is not None:
         with st.spinner("Extracting visual layout and parsing load details with Gemini..."):
             try:
-                # 1. Read raw PDF bytes directly for Gemini's multimodal vision engine
                 pdf_bytes = uploaded_file.read()
-
-                # 2. Parse PDF bytes directly into Pydantic schema
                 rate_con = parse_rate_con_pdf(pdf_bytes)
 
                 st.success("Successfully Parsed Rate Confirmation!")
@@ -58,12 +54,10 @@ with tab_parse:
 
                 # LEFT COLUMN: Live PDF Document Preview
                 with col1:
-                    st.header("� Document Preview")
+                    st.header(":page_facing_up: Document Preview")
                     try:
-                        # Load PDF bytes directly with pypdfium2
                         pdf = pdfium.PdfDocument(pdf_bytes)
                         first_page = pdf[0]
-                        # Render page at 2x scale for crisp visual quality
                         image = first_page.render(scale=2).to_pil()
                         st.image(image, use_container_width=True)
                     except Exception as pdf_err:
@@ -71,7 +65,7 @@ with tab_parse:
 
                 # RIGHT COLUMN: Parsed Metrics & Actions
                 with col2:
-                    st.header("⚡ Parsed Payload & Metrics")
+                    st.header(":zap: Parsed Payload & Metrics")
                     
                     subcol1, subcol2, subcol3, subcol4 = st.columns(4)
                     subcol1.metric("Total Rate", f"${rate_con.total_pay:,.2f}")
@@ -90,7 +84,7 @@ with tab_parse:
                     st.markdown("---")
 
                     # --- Structured Load Details ---
-                    st.subheader("� Load & Route Details")
+                    st.subheader(":clipboard: Load & Route Details")
 
                     left_col, right_col = st.columns(2)
 
@@ -108,7 +102,7 @@ with tab_parse:
                     st.markdown("---")
 
                     # --- Data Export & Database Save Section ---
-                    st.subheader("� Export & Store Options")
+                    st.subheader(":floppy_disk: Export & Store Options")
 
                     data_dict = rate_con.model_dump()
                     json_str = json.dumps(data_dict, indent=2)
@@ -120,7 +114,7 @@ with tab_parse:
 
                     with exp_col1:
                         st.download_button(
-                            label="⬇️ Download JSON",
+                            label="Download JSON",
                             data=json_str,
                             file_name=f"ratecon_{rate_con.load_number or 'parsed'}.json",
                             mime="application/json",
@@ -128,21 +122,21 @@ with tab_parse:
 
                     with exp_col2:
                         st.download_button(
-                            label="⬇️ Download CSV",
+                            label="Download CSV",
                             data=csv_str,
                             file_name=f"ratecon_{rate_con.load_number or 'parsed'}.csv",
                             mime="text/csv",
                         )
 
                     with exp_col3:
-                        if st.button("� Save to Local Ledger", type="primary"):
+                        if st.button("Save to Local Ledger", type="primary"):
                             save_load(rate_con)
                             st.toast("Load successfully saved to database!", icon="✅")
 
             except Exception as e:
                 st.error(f"Error processing document: {e}")
     else:
-        st.info("� Drop a PDF rate confirmation above to process load metrics.")
+        st.info("Drop a PDF rate confirmation above to process load metrics.")
 
 with tab_ledger:
     st.subheader("Database History (`freightslip.db`)")
