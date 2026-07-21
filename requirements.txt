@@ -3,3 +3,4 @@ google-genai
 pdfplumber
 streamlit
 python-dotenv
+sqlalchemy
