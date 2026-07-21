@@ -1,49 +1,61 @@
-# 🚚 FreightSlip
+# FreightSlip
 
-> **Automated Freight Ingestion & Rate Con Processing Engine**  
-> *Built by Two Six Studios*
+> Automated rate confirmation parser built by Two Six Studios.
 
----
+FreightSlip takes messy, unstructured rate confirmation PDFs from freight brokers and automatically pulls out the key load details—like total pay, line haul, fuel surcharge, route details, and equipment—so you don't have to type them in manually.
 
-## 📌 Overview
-
-**FreightSlip** is an AI-powered document processing web application designed to eliminate manual data entry in freight dispatch operations. By leveraging Google Gemini's multimodal vision engine and Pydantic schema enforcement, FreightSlip instantly extracts financial metrics, route logistics, and broker reference numbers directly from unstructured PDF Rate Confirmations.
-
-With built-in **SQLite & SQLAlchemy persistence**, every parsed load can be saved directly to a persistent database ledger, providing real-time revenue tracking and load history.
+👉 **Live App:** [freightslip.streamlit.app](https://freightslip.streamlit.app)
 
 ---
 
-## 🧩 Modular Integration with Fleet Scout
+## Features
 
-FreightSlip is engineered both as a high-speed standalone utility and as a **pluggable microservice module for Fleet Scout**—Two Six Studios' flagship dispatch and fleet orchestration platform.
-
-* **Step 1:** Ingest PDF Rate Confirmation directly into FreightSlip.
-* **Step 2:** Gemini Vision extracts and validates load parameters into structured Pydantic schemas.
-* **Step 3:** Validated payloads write to SQLite/SQLAlchemy ORM.
-* **Step 4:** Data passes directly to `fleetscout-core` for active driver assignment and route dispatching.
+* **PDF Ingestion:** Upload a rate con PDF and extract structured load details in seconds using Gemini's vision engine.
+* **Data Validation:** Uses Pydantic to ensure financial totals, load numbers, and route details strictly match expected data types.
+* **Database Ledger:** Automatically saves parsed loads to a local SQLite database (`freightslip.db`) so you can view past records.
+* **CSV & JSON Export:** Export parsed load data directly to JSON or CSV for accounting or spreadsheet tracking.
 
 ---
 
-## 🔥 Key Features
+## How It Works
 
-* **🤖 Multimodal AI Ingestion:** Processes raw PDF byte streams using Google's Gemini Vision API.
-* **🛡️ Strict Schema Enforcement:** Uses **Pydantic** to guarantee typed data models (`total_pay`, `line_haul_rate`, `fuel_surcharge`, `origin`, `destination`, `total_miles`, `commodity`).
-* **🗄️ Persistent Load Ledger:** Saves parsed rate confirmation records directly to a local **SQLite** database via **SQLAlchemy ORM**.
-* **📊 Historical Load Ledger Tab:** Displays a clean, filterable data grid of all past ingested freight loads.
-* **💾 Multi-Format Exports:** Download structured load payloads in one click as formatted **JSON** or **CSV** files.
+PDF Rate Con ➔ Gemini Vision API ➔ Pydantic Schema ➔ SQLite Database / CSV Export
 
 ---
 
-## 🛠️ Tech Stack
+## Local Setup
 
-* **Frontend / UI:** Streamlit
-* **AI & Document Processing:** Google GenAI SDK
-* **Data Modeling:** Pydantic V2
-* **Database & ORM:** SQLite & SQLAlchemy
-* **Data Processing:** Pandas
+1. **Clone the repo:**
+   ```bash
+   git clone [https://github.com/Twosixstudios/freightslip.git](https://github.com/Twosixstudios/freightslip.git)
+   cd freightslip
+   ```
+
+2. **Create and activate a virtual environment:**
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Add your API key:**
+   Create a `.env` file in the root directory:
+   ```env
+   GEMINI_API_KEY="your_api_key_here"
+   ```
+
+5. **Run the app:**
+   ```bash
+   streamlit run app.py
+   ```
 
 ---
 
-## 🏢 About Two Six Studios
+## Streamlit Cloud Deployment Notes
 
-Building database-driven Python applications, Streamlit tools, and practical local AI pipelines grounded in real-world logistics and operational logic.
+* Set `GEMINI_API_KEY` under **App Settings ➔ Secrets** using TOML format: `GEMINI_API_KEY = "your_key"`.
+* The app dynamically redirects database writes to `/tmp` when running on Streamlit Cloud to handle read-only container filesystems cleanly.
