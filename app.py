@@ -2,6 +2,7 @@ import json
 import os
 import pandas as pd
 import streamlit as st
+import pypdfium2 as pdfium
 from database import get_all_loads, init_db, save_load
 from parser import parse_rate_con_pdf
 
@@ -18,22 +19,22 @@ st.set_page_config(
     page_icon="⚡"
 )
 
-# Header Section (Failsafe with Streamlit Shortcodes)
+# Header Section with Vertically Centered Logo
 if HAS_LOGO:
-    col_logo, col_title = st.columns([1, 8])
+    col_logo, col_title = st.columns([1, 10], vertical_alignment="center")
     with col_logo:
-        st.image("logo.png", width=70)
+        st.image("logo.png", width=90)
     with col_title:
         st.title("FreightSlip")
         st.caption("Automated Freight Ingestion Engine — Built by Two Six Studios")
 else:
-    st.title(":truck: FreightSlip")
+    st.title("⚡ FreightSlip")
     st.caption("Automated Freight Ingestion Engine — Built by Two Six Studios")
 
 st.markdown("---")
 
 # Navigation Tabs
-tab_parse, tab_ledger = st.tabs([":page_facing_up: Parse Rate Con", ":bar_chart: Load Ledger"])
+tab_parse, tab_ledger = st.tabs(["� Parse Rate Con", "� Load Ledger"])
 
 with tab_parse:
     # File Upload Section
@@ -52,12 +53,12 @@ with tab_parse:
 
                 st.success("Successfully Parsed Rate Confirmation!")
 
-                # --- Financial Highlights Metrics ---
+                # --- Side-by-Side Magic View ---
                 col1, col2 = st.columns([1, 1], gap="large")
 
+                # LEFT COLUMN: Live PDF Document Preview
                 with col1:
-                    st.header(" Document Preview")
-                    import pypdfium2 as pdfium
+                    st.header("� Document Preview")
                     try:
                         # Load PDF bytes directly with pypdfium2
                         pdf = pdfium.PdfDocument(pdf_bytes)
@@ -68,16 +69,19 @@ with tab_parse:
                     except Exception as pdf_err:
                         st.warning(f"Could not render visual preview: {pdf_err}")
 
+                # RIGHT COLUMN: Parsed Metrics & Actions
                 with col2:
                     st.header("⚡ Parsed Payload & Metrics")
                     
                     subcol1, subcol2, subcol3, subcol4 = st.columns(4)
                     subcol1.metric("Total Rate", f"${rate_con.total_pay:,.2f}")
                     subcol2.metric("Linehaul", f"${rate_con.line_haul_rate:,.2f}")
+                    
                     if hasattr(rate_con, 'broker_name') and rate_con.broker_name:
                         subcol3.metric("Broker/Carrier", rate_con.broker_name)
                     else:
                         subcol3.metric("Broker/Carrier", "N/A")
+                        
                     if hasattr(rate_con, 'total_miles') and rate_con.total_miles:
                         subcol4.metric("Mileage/RPM", f"{rate_con.total_miles or 'N/A'}")
                     else:
@@ -86,7 +90,7 @@ with tab_parse:
                     st.markdown("---")
 
                     # --- Structured Load Details ---
-                    st.subheader(" Load & Route Details")
+                    st.subheader("� Load & Route Details")
 
                     left_col, right_col = st.columns(2)
 
@@ -104,7 +108,7 @@ with tab_parse:
                     st.markdown("---")
 
                     # --- Data Export & Database Save Section ---
-                    st.subheader(" Export & Store Options")
+                    st.subheader("� Export & Store Options")
 
                     data_dict = rate_con.model_dump()
                     json_str = json.dumps(data_dict, indent=2)
@@ -131,14 +135,14 @@ with tab_parse:
                         )
 
                     with exp_col3:
-                        if st.button(" Save to Local Ledger", type="primary"):
+                        if st.button("� Save to Local Ledger", type="primary"):
                             save_load(rate_con)
                             st.toast("Load successfully saved to database!", icon="✅")
 
             except Exception as e:
                 st.error(f"Error processing document: {e}")
     else:
-        st.info(" Drop a PDF rate confirmation above to process load metrics.")
+        st.info("� Drop a PDF rate confirmation above to process load metrics.")
 
 with tab_ledger:
     st.subheader("Database History (`freightslip.db`)")
