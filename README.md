@@ -1,77 +1,49 @@
-# 🚚 Rate Confirmation AI Parser
-> **Automated Freight Ingestion Engine — Built by Two Six Studios**
+# 🚚 FreightSlip
 
-An intelligent, multimodal document processing engine that automatically extracts financial metrics, load references, and route details from logistics Rate Confirmation PDFs using **Google Gemini AI** and **Streamlit**.
+> **Automated Freight Ingestion & Rate Con Processing Engine**  
+> *Built by Two Six Studios*
 
 ---
 
-## ✨ Key Features
+## 📌 Overview
 
-* 👁️ **Multimodal PDF Processing:** Ingests raw PDF document bytes directly via Gemini's vision engine without relying on brittle text-scraping libraries.
-* 🎯 **Structured Schema Validation:** Enforces strict data types and JSON output using **Pydantic** schema definitions (`RateConfirmation`).
-* 📊 **Financial Highlights Dashboard:** Displays critical revenue figures (**Total Pay**, **Line Haul**, **Fuel Surcharge**) in clean high-level metrics.
-* 📦 **Load & Route Extraction:** Automatically captures Broker Name, Load Reference Number, Origin, Destination, Equipment Type, and Mileage.
-* 💾 **Multi-Format Exporting:** Download structured load payloads with a single click in **JSON** or **CSV** formats.
+**FreightSlip** is an AI-powered document processing web application designed to eliminate manual data entry in freight dispatch operations. By leveraging Google Gemini's multimodal vision engine and Pydantic schema enforcement, FreightSlip instantly extracts financial metrics, route logistics, and broker reference numbers directly from unstructured PDF Rate Confirmations.
+
+With built-in **SQLite & SQLAlchemy persistence**, every parsed load can be saved directly to a persistent database ledger, providing real-time revenue tracking and load history.
+
+---
+
+## 🧩 Modular Integration with Fleet Scout
+
+FreightSlip is engineered both as a high-speed standalone utility and as a **pluggable microservice module for Fleet Scout**—Two Six Studios' flagship dispatch and fleet orchestration platform.
+
+* **Step 1:** Ingest PDF Rate Confirmation directly into FreightSlip.
+* **Step 2:** Gemini Vision extracts and validates load parameters into structured Pydantic schemas.
+* **Step 3:** Validated payloads write to SQLite/SQLAlchemy ORM.
+* **Step 4:** Data passes directly to `fleetscout-core` for active driver assignment and route dispatching.
+
+---
+
+## 🔥 Key Features
+
+* **🤖 Multimodal AI Ingestion:** Processes raw PDF byte streams using Google's Gemini Vision API.
+* **🛡️ Strict Schema Enforcement:** Uses **Pydantic** to guarantee typed data models (`total_pay`, `line_haul_rate`, `fuel_surcharge`, `origin`, `destination`, `total_miles`, `commodity`).
+* **🗄️ Persistent Load Ledger:** Saves parsed rate confirmation records directly to a local **SQLite** database via **SQLAlchemy ORM**.
+* **📊 Historical Load Ledger Tab:** Displays a clean, filterable data grid of all past ingested freight loads.
+* **💾 Multi-Format Exports:** Download structured load payloads in one click as formatted **JSON** or **CSV** files.
 
 ---
 
 ## 🛠️ Tech Stack
 
-* **Language:** Python 3.14+
-* **Frontend:** [Streamlit](https://streamlit.io/)
-* **AI Engine:** Google Gemini SDK (`google-genai`)
-* **Data Validation:** [Pydantic](https://docs.pydantic.dev/)
-* **Data Analysis:** Pandas
+* **Frontend / UI:** Streamlit
+* **AI & Document Processing:** Google GenAI SDK
+* **Data Modeling:** Pydantic V2
+* **Database & ORM:** SQLite & SQLAlchemy
+* **Data Processing:** Pandas
 
 ---
 
-## 🚀 Getting Started
+## 🏢 About Two Six Studios
 
-### 1. Prerequisites
-Ensure you have Python 3.10+ installed on your system.
-
-### 2. Installation
-Clone the repository and set up a virtual environment:
-
-```bash
-git clone [https://github.com/Twosixstudios/ratecon-ai-parser.git](https://github.com/Twosixstudios/ratecon-ai-parser.git)
-cd ratecon-ai-parser
-
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-### 3. Environment Setup
-Create a `.env` file in the root directory and insert your Gemini API Key:
-
-```env
-GEMINI_API_KEY=your_gemini_api_key_here
-```
-
-### 4. Run the Application
-Launch the Streamlit web dashboard:
-
-```bash
-streamlit run app.py
-```
-
----
-
-## 📁 Repository Structure
-
-```text
-ratecon-ai-parser/
-├── app.py              # Streamlit dashboard & file upload interface
-├── parser.py           # Core Gemini AI multimodal extraction engine
-├── schema.py           # Pydantic data schemas & structure validation
-├── requirements.txt    # Project Python dependencies
-├── .env                # Local secrets (git-ignored)
-└── .gitignore          # Git exclusion rules
-```
-
----
-
-## 🛡️ License & Credits
-
-Designed and developed by **Erik | Two Six Studios**.
+Building database-driven Python applications, Streamlit tools, and practical local AI pipelines grounded in real-world logistics and operational logic.
