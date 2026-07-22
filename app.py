@@ -14,6 +14,14 @@ init_db()
 # Check if logo file exists on server
 HAS_LOGO = os.path.exists("logo.png")
 
+
+# Cache the Gemini API call based on PDF bytes hash
+# Prevents re-calling Gemini when sliding pages or clicking UI buttons
+@st.cache_data(show_spinner=False)
+def parse_pdf_cached(pdf_bytes: bytes):
+    return parse_rate_con_pdf(pdf_bytes)
+
+
 # Page Configuration
 st.set_page_config(
     layout="wide",
@@ -66,7 +74,9 @@ with tab_parse:
         ):
             try:
                 pdf_bytes = uploaded_file.read()
-                rate_con = parse_rate_con_pdf(pdf_bytes)
+
+                # Use cached function to avoid hitting Gemini free tier rate limits
+                rate_con = parse_pdf_cached(pdf_bytes)
 
                 st.success("Successfully Parsed Rate Confirmation!")
 
@@ -208,7 +218,13 @@ with tab_parse:
                             )
 
             except Exception as e:
-                st.error(f"Error processing document: {e}")
+                err_msg = str(e)
+                if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
+                    st.error(
+                        "⏳ **Gemini Free Tier Rate Limit Reached.** Please wait ~60 seconds before trying again!"
+                    )
+                else:
+                    st.error(f"Error processing document: {e}")
     else:
         st.info("Drop a PDF rate confirmation above to process load metrics.")
 
