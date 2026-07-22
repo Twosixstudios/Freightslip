@@ -5,6 +5,8 @@ import os
 import pandas as pd
 import pypdfium2 as pdfium
 import streamlit as st
+
+from calculator import calculate_profitability
 from database import get_all_loads, init_db, save_load
 from parser import parse_rate_con_pdf
 
@@ -15,8 +17,6 @@ init_db()
 HAS_LOGO = os.path.exists("logo.png")
 
 
-# Cache the Gemini API call based on PDF bytes hash
-# Prevents re-calling Gemini when sliding pages or clicking UI buttons
 @st.cache_data(show_spinner=False)
 def parse_pdf_cached(pdf_bytes: bytes):
     return parse_rate_con_pdf(pdf_bytes)
@@ -29,7 +29,7 @@ st.set_page_config(
     page_icon="⚡",
 )
 
-# Header Section (Flexbox for tight spacing and larger, readable logo)
+# Header Section
 if HAS_LOGO:
     try:
         with open("logo.png", "rb") as f:
@@ -58,7 +58,7 @@ else:
 
 st.markdown("---")
 
-# Navigation Tabs using Streamlit Native Shortcodes
+# Navigation Tabs
 tab_parse, tab_ledger = st.tabs(
     [":page_facing_up: Parse Rate Con", ":bar_chart: Load Ledger"]
 )
@@ -74,8 +74,6 @@ with tab_parse:
         ):
             try:
                 pdf_bytes = uploaded_file.read()
-
-                # Use cached function to avoid hitting Gemini free tier rate limits
                 rate_con = parse_pdf_cached(pdf_bytes)
 
                 st.success("Successfully Parsed Rate Confirmation!")
@@ -83,14 +81,13 @@ with tab_parse:
                 # --- Side-by-Side View ---
                 col1, col2 = st.columns([1, 1], gap="large")
 
-                # LEFT COLUMN: Live PDF Document Preview with Multi-Page Selector
+                # LEFT COLUMN: Live PDF Document Preview
                 with col1:
                     st.header(":page_facing_up: Document Preview")
                     try:
                         pdf = pdfium.PdfDocument(pdf_bytes)
                         total_pages = len(pdf)
 
-                        # Render Page Slider only if document has multiple pages
                         if total_pages > 1:
                             page_num = st.slider(
                                 f"Page Selection (Total Pages: {total_pages})",
@@ -104,7 +101,6 @@ with tab_parse:
                         selected_page = pdf[page_num - 1]
                         image = selected_page.render(scale=2).to_pil()
 
-                        # Convert image for inline CSS container rendering to control zoom scaling
                         img_buf = io.BytesIO()
                         image.save(img_buf, format="PNG")
                         img_b64 = base64.b64encode(img_buf.getvalue()).decode(
@@ -122,7 +118,7 @@ with tab_parse:
                     except Exception as pdf_err:
                         st.warning(f"Could not render visual preview: {pdf_err}")
 
-                # RIGHT COLUMN: Parsed Metrics & Actions
+                # RIGHT COLUMN: Parsed Metrics, Calculator & Actions
                 with col2:
                     st.header(":zap: Parsed Payload & Metrics")
 
@@ -149,6 +145,91 @@ with tab_parse:
                         )
                     else:
                         subcol4.metric("Mileage/RPM", "N/A")
+
+                    st.markdown("---")
+
+                    # --- Interactive Trip Profitability Calculator ---
+                    st.subheader("� Trip Profitability & Decision Engine")
+
+                    with st.expander(
+                        "� Adjust Operating Expenses & Deadhead",
+                        expanded=True,
+                    ):
+                        calc_col1, calc_col2, calc_col3 = st.columns(3)
+
+                        with calc_col1:
+                            deadhead_input = st.number_input(
+                                "Deadhead Miles",
+                                min_value=0,
+                                value=45,
+                                step=5,
+                            )
+                            diesel_input = st.number_input(
+                                "Diesel Price ($/gal)",
+                                min_value=1.00,
+                                value=3.85,
+                                step=0.05,
+                            )
+
+                        with calc_col2:
+                            mpg_input = st.number_input(
+                                "Truck MPG",
+                                min_value=3.0,
+                                value=6.5,
+                                step=0.1,
+                            )
+                            maint_input = st.number_input(
+                                "Maintenance ($/mi)",
+                                min_value=0.00,
+                                value=0.15,
+                                step=0.01,
+                            )
+
+                        with calc_col3:
+                            tolls_input = st.number_input(
+                                "Tolls & Misc ($)",
+                                min_value=0,
+                                value=25,
+                                step=5,
+                            )
+
+                        # Run Profitability Calculation
+                        profit_data = calculate_profitability(
+                            gross_pay=rate_con.total_pay,
+                            loaded_miles=rate_con.total_miles,
+                            deadhead_miles=deadhead_input,
+                            diesel_price=diesel_input,
+                            truck_mpg=mpg_input,
+                            maintenance_cost_per_mile=maint_input,
+                            tolls_misc=tolls_input,
+                        )
+
+                        # Decision Card Display
+                        st.markdown(
+                            f"""
+                            <div style="background-color: #1e2330; border-left: 5px solid {'#10b981' if profit_data.net_rpm >= 1.20 else '#f59e0b' if profit_data.net_rpm >= 0.75 else '#ef4444'}; padding: 12px; border-radius: 6px; margin-top: 10px;">
+                                <h4 style="margin:0; font-size: 1.1rem; color: #f8fafc;">{profit_data.status_emoji} {profit_data.status}</h4>
+                                <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 0.9rem;">
+                                    True RPM: <b>${profit_data.true_rpm:.2f}/mi</b> | Net Profit / Mile: <b>${profit_data.net_rpm:.2f}/mi</b>
+                                </p>
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
+
+                        # Profitability Metric Badges
+                        m_col1, m_col2, m_col3 = st.columns(3)
+                        m_col1.metric(
+                            "Net Profit", f"${profit_data.net_profit:,.2f}"
+                        )
+                        m_col2.metric(
+                            "Est. Fuel Cost",
+                            f"${profit_data.fuel_cost:,.2f}",
+                        )
+                        m_col3.metric(
+                            "Total Expenses",
+                            f"${profit_data.total_expenses:,.2f}",
+                        )
 
                     st.markdown("---")
 
