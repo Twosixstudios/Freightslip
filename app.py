@@ -1,4 +1,5 @@
 import base64
+import io
 import json
 import os
 import pandas as pd
@@ -72,17 +73,28 @@ with tab_parse:
                 # --- Side-by-Side View ---
                 col1, col2 = st.columns([1, 1], gap="large")
 
-                # LEFT COLUMN: Live PDF Document Preview with CSS Max-Height Scaling
+                # LEFT COLUMN: Live PDF Document Preview with Multi-Page Selector
                 with col1:
                     st.header(":page_facing_up: Document Preview")
                     try:
                         pdf = pdfium.PdfDocument(pdf_bytes)
-                        first_page = pdf[0]
-                        image = first_page.render(scale=2).to_pil()
+                        total_pages = len(pdf)
+
+                        # Render Page Slider only if document has multiple pages
+                        if total_pages > 1:
+                            page_num = st.slider(
+                                f"Page Selection (Total Pages: {total_pages})",
+                                min_value=1,
+                                max_value=total_pages,
+                                value=1,
+                            )
+                        else:
+                            page_num = 1
+
+                        selected_page = pdf[page_num - 1]
+                        image = selected_page.render(scale=2).to_pil()
 
                         # Convert image for inline CSS container rendering to control zoom scaling
-                        import io
-
                         img_buf = io.BytesIO()
                         image.save(img_buf, format="PNG")
                         img_b64 = base64.b64encode(img_buf.getvalue()).decode(
